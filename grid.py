@@ -6,19 +6,21 @@ class Board:
 
     def __init__(self):
         #self.board = [list(range(1, 5)), list(range(5, 9)), list(range(9, 13)), list(range(13, 16)) + ['*']]
-        N = input("Input a number for the size of the board")
+        N = input("Input a number for the size of the board: ")
         N = int(N)
-        size_of_board = int(math.sqrt(N+1))
+        sizeOfBoard = int(math.sqrt(N+1))
         self.board = []
         begin = 1
-        tempValueHolder =0
+        tempBoardHolder = sizeOfBoard
 
-        for i in range(1,size_of_board+1):
-          row = [list(range(begin,size_of_board + 1))]
+        for i in range(1,sizeOfBoard + 1): 
+          row = [list(range(begin, tempBoardHolder+1))]
+          if (i == sizeOfBoard):
+              row[0][sizeOfBoard-1] = '*'
+          begin += sizeOfBoard
+          tempBoardHolder += sizeOfBoard
+          #   print(i, row)
           self.board.append(row)
-          #begin = size_of_board+1
-        #self.board = [list()]
-        #self.board = [list()]
 
         self.goal = []
         for i in self.board:
