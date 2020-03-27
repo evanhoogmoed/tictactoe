@@ -2,31 +2,33 @@ import queue
 import random
 import math
 
+N = input("Input a number for the size of the game: ")
+N = int(N)
+
 class Board:
 
     def __init__(self):
-        #self.board = [list(range(1, 5)), list(range(5, 9)), list(range(9, 13)), list(range(13, 16)) + ['*']]
-        N = input("Input a number for the size of the board: ")
-        N = int(N)
-        sizeOfBoard = int(math.sqrt(N+1))
+        self.size_of_board = int(math.sqrt(N+1))
         self.board = []
         begin = 1
-        tempBoardHolder = sizeOfBoard
+        temp_value = self.size_of_board
 
-        for i in range(1,sizeOfBoard + 1): 
-          row = [list(range(begin, tempBoardHolder+1))]
-          if (i == sizeOfBoard):
-              row[0][sizeOfBoard-1] = '*'
-          begin += sizeOfBoard
-          tempBoardHolder += sizeOfBoard
-          #   print(i, row)
+        for i in range(1,self.size_of_board+1):
+          row = list(range(begin,temp_value + 1))
+          if (i == self.size_of_board):
+            row[self.size_of_board-1] = '*'
+          begin += self.size_of_board
+          temp_value += self.size_of_board
           self.board.append(row)
+          
+        #self.board = [list()]
+        #self.board = [list()]
 
         self.goal = []
         for i in self.board:
             self.goal.append(tuple(i))
         self.goal = tuple(self.goal)
-        self.empty = [3, 3]
+        self.empty = [self.size_of_board-1, self.size_of_board-1]
 
     def __repr__(self):
         string = ''
@@ -54,8 +56,8 @@ class Board:
     def match(self, copy):
         a = Board()
         a.board = copy
-        for row in range(0, 4):
-            for col in range(0, 4):
+        for row in range(0, self.size_of_board):
+            for col in range(0, self.size_of_board):
                 if a.board[row][col] == '*':
                     a.empty = [row, col]
         result = []
@@ -102,9 +104,10 @@ class Board:
         except IndexError:
             pass
 
-    def shuffle(self, steps):
-        for i in range(0, steps):
-            direction = random.randrange(1, 5)
+ 
+    def shuffle(self, steps):    #steps is an int value
+        for i in range(0,steps):
+            direction = random.randrange(1, 4)
             if direction == 1:
                 self.move_up()
             elif direction == 2:
@@ -114,6 +117,18 @@ class Board:
             elif direction == 4:
                 self.move_down()
 
+    def solve_dfs(self):
+      start = self.board
+      stack, path = [start] , []
+      while stack:
+        vertex = stack.pop()
+        if vertex in path:
+         continue
+        path.append(vertex)
+        for neighbor in self.board[vertex]: #error here
+          stack.append(neighbor)
+
+        return path
     def solve(self):
         start = self.convert_to_tuple(self.board)
         pred = {}
@@ -167,11 +182,14 @@ class Board:
         raise Exception('There is no solution.')
 
 
+
 board = Board()
 board.shuffle(20)
 print (board)
 path = board.solve()
 print (path)
+dfs_path = board.solve_dfs()
+print (dfs_path)
 
 for dir in path:
     if dir == 'right':
