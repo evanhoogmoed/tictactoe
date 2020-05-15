@@ -1,123 +1,105 @@
 import copy
 import time
-import numpy as np
-
-
+        
 class Game(object):
     """A tic-tac-toe game."""
 
     def __init__(self, grid):
         """Instances differ by their grid marks."""
-        self.grid = copy.deepcopy(grid)  # No aliasing!
-        self.lastmoves = []
-        self.winner = None
+        self.grid = copy.deepcopy(grid) # No aliasing!
 
     def display(self):
         """Print the game board."""
         for row in self.grid:
             print(row)
 
-    def possible_moves(self):   #def get_free_positions AKA def moves(self)
+    def moves(self):
         """Return a list of possible moves given the current marks."""
-        possible_moves = []
+
+        onedarr = []
         for row in self.grid:
-            for spot in row:
-                if(spot == "-"):
-                    possible_moves.append(row)
-        return possible_moves  
-        # returns a list of indexes ex. [2,5,7]
-        # Basically, check which space has - and return that this is a
-        # a possible move. We will use it afterwards with minimax
-        # returns the pair of possible locations
+          for col in row:
+            onedarr.append(col)
+        
+        get_indexes = lambda onedarr, xs: [i for (y, i) in zip(xs, range(len(xs))) if onedarr == y]
+        moves = get_indexes('-',onedarr)
+        print(moves)
+        return(moves)
+        
+
 
     def neighbor(self, move, mark):
         """Return a Game instance like this one but with one move made."""
-        one_move = self.grid[move] = mark
-        self.lastmvoes.append(move)
-        return one_move
-
-    def mark(self, mark, pos):
-        '''Mark a position with marker X or O'''
-        self.board[pos] = mark
-        self.lastmoves.append(pos)
-
-    def revert_last_move(self): 
-        """Undo the last move - Not an original function"""
-        self.grid[self.lastmoves.pop()] = '-'
-        self.winner = None
-
-    def utility(self): #def is_gameover()
-        '''Test whether game has ended'''
-        win_positions = [(0, 1, 2), (3, 4, 5), (6, 7, 8), (0, 3, 6), (1, 4, 7), (2, 5, 8), (0, 4, 8), (2, 4, 6)]
-        for i, j, k in win_positions:
-            if self.board[i] == self.board[j] == self.board[k] and self.board[i] != '-':
-                self.winner = self.board[i]
-                return True
+        #Make game identical to this with independent copy of grid
+        game = self.grid
+        new_game = copy.deepcopy(game)
+        other_game = []
+        for row in new_game:
+          for col in row:
+            other_game.append(col)
+        other_game[move] = mark
+        return other_game
         
-        if '-' not in self.board:
-            self.winner = '-'
-            return True
+    def utility(self):
+        """Return the minimax utility value of this game:
+        1 = X win, -1 = O win, 0 = tie, None = not over yet."""
+        win_positions = [(0,1,2), (3,4,5), (6,7,8), (0,3,6),(1,4,7),(2,5,8), (0,4,8), (2,4,6)]
 
-        return False
-        # YOU FILL THIS IN
+        for i,j,k in win_positions:
+          if self.grid[i] == self.grid[j] == self.grid[k] and self.grid[i]!= '-':
+            if self.grid[i] == 'X':
+              return 1
+            else:
+              return -1
+        
+        if '-' not in self.grid:
+          return 0
+        return None
         # for utility here, check the code from this link
-        # http://www.sarathlakshman.com/2011/04/29/writing-a-tic-tac
-        # to calculate the utility of this current board.
-
+        #http://www.sarathlakshman.com/2011/04/29/writing-a-tic-tac
+        #to calculate the utility of this current board.
 
 class Agent(object):
     """Knows how to play tic-tac-toe."""
 
     def __init__(self, mark):
-        """Agents assigned to either X or O"""
+        """Agents use either X or O."""
         self.mark = mark
 
     def maxvalue(self, game, opponent):
-        """Compute the highest utility this game can have."""
-        bestscore = None
+        """Compute the highest utility this game can have.
+           Return the utility and a corresponding move."""
+        utility = game.utility()
+        #the utility function returns none if the game is not done yet
+        if utility is not None:
+            return (utility, None)
+        bestval = None
         bestmove = None
-
-        for move in game.possible_moves():
-            game.mark(self.mark, move)
-
-            if game.utility():
-                score = self.utility(game)
-            else:
-                move_pos, score = self.minvalue(game)
-
-            game.revert_last_move()
-
-            if bestscore == None or score > bestscore:
-                bestscore = score
-                bestmove = move
-        return bestmove, bestscore
-
+        for move in game.moves():
+            val, _ = opponent.minvalue(game.neighbor(move, self.mark), self)
+            if bestval is None or val > bestval:
+                bestval, bestmove = val, move
+        return (bestval, bestmove)
 
     def minvalue(self, game, opponent):
-        """Compute the lowest utility this game can have."""
-        bestscore = None
+        """Compute the low utility this game can have.
+           Return the utility and a corresponding move."""
+        utility = game.utility()
+        #the utility function returns none if the game is not done yet
+        if utility is not None:
+            return (utility, None)
+        bestval = None
         bestmove = None
-
-        for m in game.possible_moves():
-            game.mark(opponent.mark, m)
-        
-            if game.utility():
-                score = self.utility(game)
-            else:
-                move_position, score = self.maxvalue(game)
-
-            game.revert_last_move
-
-            if bestscore == None or score < bestscore:
-                bestscore = score
-                bestmove = m
-
-        return bestmove, bestscore
+        for move in game.moves():
+            val, _ = opponent.maxvalue(game.neighbor(move, self.mark), self)
+            if bestval is None or val < bestval:
+                bestval, bestmove = val, move
+        return (bestval, bestmove)
 
 def main():
     """Create a game and have two agents play it."""
 
-    game = Game([['-', '-', '-'], ['-', '-', '-'], ['-', '-', '-']])
+    game = Game([['-','-','-'], ['-','-','-'], ['-','-','-']])
     game.display()
 
     maxplayer = Agent('X')
@@ -140,7 +122,6 @@ def main():
         
         if game.utility() is not None:
             break
-
 
 if __name__ == '__main__':
     main()
